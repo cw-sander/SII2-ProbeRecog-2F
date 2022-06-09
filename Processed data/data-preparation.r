@@ -10,7 +10,7 @@
 ##
 ## Author: Carsten Sander
 ##
-## Date Created: 2022-02-18
+## Date Created: 2022-06-09
 ##
 ## Copyright (c) Carsten Sander, 2022
 ## Email: carsten.sander@uni-hamburg.de
@@ -27,16 +27,18 @@
 library(tidyverse)
 
 # Download raw data from Gitlab
-paths <- read.csv("Processed data/raw-data-paths.csv", header = FALSE)[, 1]
+#paths <- read.csv("Processed data/raw-data-paths.csv", header = FALSE)[, 1]
+paths <- "/Users/carsten/Documents/Eigene Experimente/SII2-ProbeRecog-2F/Gitlab/data/PARTICIPANT_SII2-ProbeRecog-2F_2022-06-08_15h33.36.296.csv"
 pav <- lapply(paths, read_csv)
-qua <- read.csv("https://gitlab.pavlovia.org/csander/sii1-proberecog-1f/raw/master/additional%20data/qualtrics.csv")[-c(1, 2), ] # nolint
-stims <- read.csv("https://gitlab.pavlovia.org/csander/sii1-proberecog-1f/raw/master/additional%20data/stimuli.csv") # nolint
+#qua <- read.csv("https://gitlab.pavlovia.org/csander/sii2-proberecog-2f/raw/master/additional%20data/qualtrics.csv")[-c(1, 2), ] # nolint
+#stims <- read_excel("https://gitlab.pavlovia.org/csander/sii2-proberecog-2f/raw/master/stimuli/stimuli.xlsx") # nolint
 
 # ---------------------------
 
 # Process pavlovia data
 trials <- data.frame()
-ratings <- data.frame()
+ratings_labels <- data.frame()
+ratings_reasons <- data.frame()
 subjects <- data.frame()
 
 # Loop over all individual data.frames
@@ -48,12 +50,14 @@ for (i in seq(length(pav))) {
             probe_type %in% c("implied", "implied_other")
         ) %>%
         select(
-            subject_id = ID, item_id, label = probe, probe_type,
-            is_correct = c_probe_resp.corr, rt = c_probe_resp.rt
+            subject_id = ID, item_id, item_order, reason_type, label = probe,
+            probe_type, is_correct = c_probe_resp.corr, rt = c_probe_resp.rt
         ) %>%
         mutate(
             probe_type = recode(probe_type,
-                "implied" = "im", "implied_other" = "io"))
+                "implied" = "im", "implied_other" = "io"),
+            item_order = recode(item_order,
+                "behavior first" = "br", "reason first" = "rb"))
     # Calculate individual cutoff (M + 2 * SD) based on correct responses
     rts <- trials_i$rt[trials_i$is_correct == 1]
     m2sd <- mean(rts) + 2 * sd(rts)
@@ -88,20 +92,35 @@ for (i in seq(length(pav))) {
 
     # Get ratings of labels regarding valence
     # identification, and availability
-    ratings_i <- pav[[i]] %>%
-        filter(rating_block != "") %>%
+    ratings_labels_i <- pav[[i]] %>%
+        filter(rating_block %in% c("identity", "baserate", "necessity")) %>%
         select(
             subject_id = ID,
             label = rated_label,
             response = rating_response,
-            block = rating_block
+            block = rating_block,
         ) %>%
         pivot_wider(
             names_from = block,
             values_from = response,
             names_glue = "rating_{block}"
         )
-    ratings <- dplyr::bind_rows(ratings, ratings_i)
+    ratings_reasons_i <- pav[[i]] %>%
+        filter(rating_block == "sufficiency") %>%
+        select(
+            subject_id = ID,
+            response = rating_response,
+            block = rating_block,
+            item_id = rated_item_id,
+            reason_type = rated_reason_type
+        ) %>%
+        pivot_wider(
+            names_from = block,
+            values_from = response,
+            names_glue = "rating_{block}"
+        )
+    ratings_labels <- dplyr::bind_rows(ratings_labels, ratings_labels_i)
+    ratings_reasons <- dplyr::bind_rows(ratings_reasons, ratings_reasons_i)
 }
 
 # ---------------------------
@@ -175,7 +194,8 @@ subjects <- subjects %>%
 
 # Merge all data.frames
 d_long <- trials %>%
-    left_join(ratings) %>%
+    left_join(ratings_labels) %>%
+    left_join(ratings_reasons) %>%
     filter(subject_id %in% subjects$subject_id) %>%
     left_join(subjects) %>%
     left_join(stims) %>%
