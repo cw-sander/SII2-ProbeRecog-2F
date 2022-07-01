@@ -24,14 +24,14 @@
 ## ---------------------------
 
 # Load packages
-library(tidyverse)
+library(tidyverse) # tidyverse_1.3.1
 
 # Download raw data from Gitlab
-#paths <- read.csv("Processed data/raw-data-paths.csv", header = FALSE)[, 1]
-paths <- "/Users/carsten/Documents/Eigene Experimente/SII2-ProbeRecog-2F/Gitlab/data/PARTICIPANT_SII2-ProbeRecog-2F_2022-06-08_15h33.36.296.csv"
+paths <- read.csv("Processed data/raw-data-paths.csv", header = FALSE)[, 1]
 pav <- lapply(paths, read_csv)
-#qua <- read.csv("https://gitlab.pavlovia.org/csander/sii2-proberecog-2f/raw/master/additional%20data/qualtrics.csv")[-c(1, 2), ] # nolint
-#stims <- read_excel("https://gitlab.pavlovia.org/csander/sii2-proberecog-2f/raw/master/stimuli/stimuli.xlsx") # nolint
+qua <- read.csv("https://gitlab.pavlovia.org/csander/sii2-proberecog-2f/raw/master/additional%20data/qualtrics.csv")[-c(1, 2), ] # nolint
+download.file("https://gitlab.pavlovia.org/csander/sii2-proberecog-2f/raw/master/stimuli/stimuli.xlsx", destfile = "./stimuli.xlsx", cacheOK = TRUE) # nolint
+stims <- readxl::read_excel("./stimuli.xlsx")
 
 # ---------------------------
 
@@ -93,7 +93,7 @@ for (i in seq(length(pav))) {
     # Get ratings of labels regarding valence
     # identification, and availability
     ratings_labels_i <- pav[[i]] %>%
-        filter(rating_block %in% c("identity", "baserate", "necessity")) %>%
+        filter(rating_block %in% c("identity", "necessity", "baserate")) %>%
         select(
             subject_id = ID,
             label = rated_label,
@@ -143,7 +143,8 @@ subjects <- subjects %>%
         age = as.numeric(str_extract(age, "\\d*")),
         gender = recode(gender,
             "anderes (z.B. nicht-binär)" = "other",
-            "männlich" = "male", "weiblich" = "female"),
+            "männlich" = "male", "weiblich" = "female",
+            "keine Angabe" = "not specified"),
         pol_orientation = as.numeric(recode(pol_orientation,
             "links" = "1", "rechts" = "10")),
         pol_interest = as.numeric(recode(pol_interest.,
@@ -192,6 +193,26 @@ subjects <- subjects %>%
 
 # ---------------------------
 
+# Select behavior, reason and ratings from stimulus file
+stims <- stims %>%
+    filter(trial_type == "test") %>%
+    select(
+        item_id, behavior,
+        reason_sufficient = reason,
+        reason_control = ctrl_reason,
+        score_sufficient = reason_score,
+        score_control = control_score,
+        sconsensus, cconsensus, label_score, reason_diff
+    ) %>%
+    pivot_longer(
+        cols = c(reason_sufficient, reason_control, score_sufficient, score_control), # nolint
+        names_to = c(".value", "reason_type"),
+        names_pattern = "(.*)_(.*)"
+    ) %>%
+    rename(reason_score = score)
+
+# ---------------------------
+
 # Merge all data.frames
 d_long <- trials %>%
     left_join(ratings_labels) %>%
@@ -199,10 +220,12 @@ d_long <- trials %>%
     filter(subject_id %in% subjects$subject_id) %>%
     left_join(subjects) %>%
     left_join(stims) %>%
-    select(-rt)
+    select(-rt) %>%
+    mutate(reason_type = recode(reason_type, "sufficient" = "suff", "control" = "ctrl")) %>% # nolint
+    mutate_at(c("reason_type", "probe_type", "item_order"), factor)
 
 # ---------------------------
 
 # Export data
-saveRDS(d_long, file = "Processed data/d-long.rds")
-d_long <- readRDS("Processed data/d-long.rds")
+saveRDS(d_long, file = "Processed data/d-long-250.rds")
+#d_long <- readRDS("Processed data/d-long.rds")
