@@ -455,7 +455,7 @@ pre code {
 <div id="introduction" class="section level3">
 <h3>Introduction</h3>
 <p>Research on person perception has revealed that people tend to
-attribute others’ behavior to stable person characteristics, even if it
+attribute other’s behavior to stable person characteristics, even if it
 can just as well be explained by reasons such as situational factors or
 mental states. This tendency is known as the correspondence bias
 (Gilbert &amp; Malone, 1995) and may play an important role in the
@@ -475,23 +475,62 @@ ideological dispositions.</p>
 <h3>Sample Characteristics</h3>
 <p>For the first interim analysis we collected data from a total of N =
 250 participants. Following our pre-registered exclusion criteria, we
-excluded 5 participants whose average correct response times were slower
-than two standard deviations over the sample mean, 1 who rated their own
-data to be unfit for analysis, and 1 who did not give informed consent.
-This resulted in a sample of N = 236 participants (126 female, 101 male,
-5 other, 4 not specified; average age M = 27.8 years, SD = 7.9, ranging
-from 18 to 66). Participants were recruited via the online platform
-Prolific (www.prolific.co) and received monetary compensation of 4.50
-GBP for completing the 30-minute study. An additional XX people started
-the experiment on prolific but either returned their submission,
-timed-out, or only partially completed the experiment due to technical
-issues.</p>
+excluded 9 participants whose average correct response times were slower
+than two standard deviations over the sample mean, 1 whose recognition
+performance was lower than 60% in the probe recognition task, 3 who
+rated their own data to be unfit for analysis, and 1 who did not give
+informed consent. This resulted in a sample of N = 236 participants (126
+female, 101 male, 5 other, 4 not specified; average age M = 27.8 years,
+SD = 7.9, ranging from 18 to 66). Participants were recruited via the
+online platform Prolific (www.prolific.co) and received monetary
+compensation of 4.50 GBP for completing the 30-minute study. An
+additional 42 people started the experiment on prolific but either
+returned their submission, timed-out, or only partially completed the
+experiment due to technical issues.</p>
 <p>On average, participants reported to be rather left leaning (M = 3.8,
 SD = 1.4 on a scale from 1 = left to 10 = right), rather interested in
 politics (M = 6.2, SD = 2.1, on a scale ranging from 1 = not at all to
 10 = very strongly), and moderately satisfied with the German political
 system (M = 2.5, SD = 0.5, on a scale ranging from 1 = satisfied to 4 =
 dissatisfied).</p>
+</div>
+<div id="manipulation-check" class="section level3">
+<h3>Manipulation check</h3>
+<pre class="r"><code>manipulation_check &lt;- d_long %&gt;%
+    filter(probe_type == &quot;im&quot;) %&gt;%
+    select(subject_id, reason_type, sufficiency = rating_sufficiency) %&gt;%
+    group_by(subject_id, reason_type) %&gt;%
+    summarize(mn_sufficiency = mean(sufficiency, na.rm = TRUE)) %&gt;%
+    pivot_wider(names_from = &quot;reason_type&quot;, values_from = &quot;mn_sufficiency&quot;)</code></pre>
+<pre><code>## `summarise()` has grouped output by &#39;subject_id&#39;. You can override using the
+## `.groups` argument.</code></pre>
+<pre class="r"><code># Descriptives
+m_suff &lt;- format(round(mean(manipulation_check$suff), 2), nsmall = 2)
+m_ctrl &lt;- format(round(mean(manipulation_check$ctrl), 2), nsmall = 2)
+sd_suff &lt;- format(round(sd(manipulation_check$suff), 2), nsmall = 2)
+sd_ctrl &lt;- format(round(sd(manipulation_check$ctrl), 2), nsmall = 2)
+# One-sided paired t-test
+t1 &lt;- t.test(manipulation_check$suff, manipulation_check$ctrl,
+             paired = TRUE, alternative = &quot;greater&quot;)
+# P-value in apa format
+t1_p &lt;- ifelse(t1$p.value &lt; 0.001, &quot;p &lt; .001&quot;,
+               paste(&quot;p =&quot;, sub(&quot;0.&quot;, &quot;.&quot;, round(t1$p.value, 3))))
+# Calculating d_z as mean difference divided by sd of the differences
+d_z &lt;- format(round(mean(manipulation_check$suff - manipulation_check$ctrl) /
+                    sd(manipulation_check$suff - manipulation_check$ctrl), 2),
+              nsmall = 2)</code></pre>
+<p>We included a manipulation check for reason type. The sufficient
+reasons are supposed to sufficiently explain the behaviors, whereas the
+control reasons are supposed to insufficiently explain the behavior (or
+not explain the behavior at all). We thus asked participants at the end
+of the study to rate the sufficiency of each reason for the respective
+behavior and expected the sufficient reasons to score higher in their
+sufficiency ratings than the control reasons. To test this, we conducted
+a paired t-test. On average, participants gave significantly higher
+sufficiency ratings in the sufficient condition (M = 3.48, SD = 0.57)
+than in the control condition (M = 2.25, SD = 0.58), t(235) = 26.35, p
+&lt; .001, d<sub>z</sub> = 1.72. We infer from this, that our
+manipulation of reason type worked.</p>
 </div>
 <div id="preregistered-hypothesis" class="section level3 tabset">
 <h3 class="tabset">Preregistered hypothesis</h3>

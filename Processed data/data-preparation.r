@@ -175,18 +175,18 @@ subjects <- subjects %>%
     filter(
         # b. who withdraw their consent to
         # data analysis after full debriefing
-        consent_given == 1, # excludes 0
+        consent_given == 1, # excludes 1
         # d. whose recognition performance
         # is < 60% in the probe recognition task
-        correct_rate >= .6, # excludes 0
+        correct_rate >= .6, # excludes 1
         # e. whose average response times are slower
         # than two standard deviations of the sample mean
-        mean_rt < cutoff, # excludes 5
+        mean_rt < cutoff, # excludes 9
         # f. who self-report not having followed the instructions
         # conscientiously (5 or lower on a scale from 1 to 10) or
         # rate their own data to be unfit for analyses
-        compliance > 5, # excludes 1
-        data_quality. == "ja" # excludes 1
+        compliance > 5, # excludes 0
+        data_quality. == "ja" # excludes 3
     ) %>%
     select(subject_id = ID, age, gender, pol_interest,
         pol_orientation, pol_satisfaction)
