@@ -90,8 +90,8 @@ for (i in seq(length(pav))) {
     subjects[i, "correct_rate"] <- sum(trials_i$is_correct) / nrow(trials_i)
     subjects[i, "mean_rt"] <- mean(trials_i$rt_M2SD_none[trials_i$is_correct == 1], na.rm = TRUE) # nolint
 
-    # Get ratings of labels regarding valence
-    # identification, and availability
+    # Get ratings of labels regarding
+    # identity, necessity, and baserate
     ratings_labels_i <- pav[[i]] %>%
         filter(rating_block %in% c("identity", "necessity", "baserate")) %>%
         select(
@@ -105,6 +105,7 @@ for (i in seq(length(pav))) {
             values_from = response,
             names_glue = "rating_{block}"
         )
+    # Get ratings of reasons regarding sufficiency
     ratings_reasons_i <- pav[[i]] %>%
         filter(rating_block == "sufficiency") %>%
         select(
@@ -171,7 +172,7 @@ subjects <- subjects %>%
     # criterion "a. who did not complete the probe recognition task" and
     # criterion "c. who self-report not being fluent in German"
     # are neccessarily not met due to the manner of data collection.
-    # 170 --> 163 (7 excluded, read reasons below)
+    # 250 --> 236 (14 excluded, read reasons below)
     filter(
         # b. who withdraw their consent to
         # data analysis after full debriefing
