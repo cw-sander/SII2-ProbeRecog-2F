@@ -738,7 +738,7 @@ rt_3f_ex %>%
     theme_cs_talk()
   } %T>%
   ggexport(width = 7, height = 7,
-       filename = here("Analysis/rt-3f-qq-plot.pdf"))
+       filename = here("Analysis/rt-3f-qq.pdf"))
 ```
 
 Upon visual inspection the distributions of the mean response latencies in the different conditions did not seem severely non-normal. We therefore performed the analysis with untransformed mean response latencies.
@@ -748,14 +748,14 @@ Upon visual inspection the distributions of the mean response latencies in the d
 knitr::kable(rt_3f_mod, format = "markdown")
 ```
 
-We conducted a three-way repeated-measures ANOVA to evaluate the effects of probe type, reason type, and order of presentation on the mean response latencies. There was again a significant main effect for probe type, F(`r rt_3f_mod$DFn[1]`, `r rt_3f_mod$DFd[1]`) = `r rt_3f_mod$F[1]`, `r formp(rt_3f_mod$p[1])`, $\eta_{p}^{2}$ = `r rt_3f_mod$pes[1]`, and once more no significant interaction between probe type and reason type, F(`r rt_3f_mod$DFn[3]`, `r rt_3f_mod$DFd[3]`) = `r rt_3f_mod$F[3]`, `r formp(rt_3f_mod$p[3])`, $\eta_{p}^{2}$ = `r rt_3f_mod$pes[3]`. Most interestingly, there was only a marginally significant three-way interaction, F(`r rt_3f_mod$DFn[7]`, `r rt_3f_mod$DFd[7]`) = `r rt_3f_mod$F[7]`, `r formp(rt_3f_mod$p[7])`, $\eta_{p}^{2}$ = `r rt_3f_mod$pes[7]`. This suggests that the lack of discounting was not restricted to one order of presentation.
+We conducted a three-way repeated-measures ANOVA to evaluate the effects of probe type, reason type, and order of presentation on the mean response latencies. There was again a significant main effect for probe type, F(`r rt_3f_mod$DFn[1]`, `r rt_3f_mod$DFd[1]`) = `r rt_3f_mod$F[1]`, `r formp(rt_3f_mod$p[1])`, $\eta_{p}^{2}$ = `r rt_3f_mod$pes[1]`, and once more no significant interaction between probe type and reason type, F(`r rt_3f_mod$DFn[4]`, `r rt_3f_mod$DFd[4]`) = `r rt_3f_mod$F[4]`, `r formp(rt_3f_mod$p[4])`, $\eta_{p}^{2}$ = `r rt_3f_mod$pes[4]`. Most interestingly, there was only a marginally significant three-way interaction, F(`r rt_3f_mod$DFn[7]`, `r rt_3f_mod$DFd[7]`) = `r rt_3f_mod$F[7]`, `r formp(rt_3f_mod$p[7])`, $\eta_{p}^{2}$ = `r rt_3f_mod$pes[7]`. This suggests that the lack of discounting was not restricted to one order of presentation.
 
 #### Descriptives
 ```{r rt 3f descriptives}
 knitr::kable(rt_3f_desc, format = "markdown")
 ```
 
-#### Visualization
+#### Lineplot
 ```{r rt 3f lineplot, message = FALSE}
 rt_3f_desc %>%
   {
