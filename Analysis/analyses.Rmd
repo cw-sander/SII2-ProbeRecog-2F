@@ -132,11 +132,11 @@ cor_table <- function(data, method = c("pearson", "spearman")) {
   pvalues <- data %>%
     cor_pmat(method = method[1]) %>%
     rowwise() %>%
-    mutate(across(!1, formp))
+    mutate(across(!1, ~ formp(.x)))
   coefs <- data %>%
     cor_mat(method = method[1]) %>%
     rowwise() %>%
-    mutate(across(!1, forma, 2))
+    mutate(across(!1, ~ forma(.x, 2)))
   for (row in seq(2, nrow(coefs))) {
     for (col in seq(2, ncol(coefs) - 1)) {
       c <- coefs[row, col]
@@ -203,48 +203,48 @@ mlm_compare <- function(new, old) {
   return(out)
 }
 theme_cs_talk <- function(font = "Nunito", lab_size = 16, label_size = 14,
-  dark = "#465263", light = "#E1E9ED", solid_facet = TRUE) {
+  dark = "#465263", light = "#849AB9", solid_facet = TRUE) {
   if (solid_facet) {
-    facet_fill <- dark
-    facet_text <- light
+  facet_fill <- dark
+  facet_text <- light
   } else if (!solid_facet) {
-    facet_fill <- "transparent"
-    facet_text <- dark
+  facet_fill <- "transparent"
+  facet_text <- dark
   }
   theme_bw(base_size = 16) %+replace%
   theme(
-    # Rectangle elements
-    plot.background = element_rect(fill = "transparent",
-      color = NA_character_),
-    panel.background = element_rect(fill = "transparent"),
-    legend.background = element_rect(fill = "transparent", color = NA),
-    strip.background = element_rect(color = facet_fill,
-      fill = facet_fill, size = 1),
-    # Text elements
-    plot.title = element_text(family = font, size = lab_size,
-      face = "bold", hjust = 0, vjust = 2, color = dark),
-    plot.subtitle = element_text(family = font,
-      size = lab_size - 2, color = dark),
-    plot.caption = element_text(family = font, size = lab_size,
-      hjust = 1, color = dark),
-    axis.title = element_text(family = font, size = lab_size,
-      color = dark),
-    axis.text = element_text(family = font, size = label_size,
-      color = dark),
-    axis.text.x = element_text(margin = margin(5, b = 10),
-      color = dark),
-    legend.title = element_text(family = font, size = lab_size,
-      color = dark, hjust = 0),
-    legend.text = element_text(family = font, size = label_size,
-      color = dark),
-    strip.text = element_text(family = font, size = label_size,
-      color = facet_text, margin = margin(4, 4, 4, 4)),
-    # Line elements
-    axis.ticks = element_line(color = dark, size = 0.5),
-    legend.key = element_rect(fill = "transparent", color = NA_character_),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.border = element_rect(color = dark, fill = NA, size = 1)
+  # Rectangle elements
+  plot.background = element_rect(fill = "transparent",
+    color = NA_character_),
+  panel.background = element_rect(fill = "transparent"),
+  legend.background = element_rect(fill = "transparent", color = NA),
+  strip.background = element_rect(color = facet_fill,
+    fill = facet_fill, linewidth = 1),
+  panel.border = element_rect(color = dark, fill = NA, linewidth = 1),
+  legend.key = element_rect(fill = "transparent", color = NA_character_),
+  # Text elements
+  plot.title = element_text(family = font, size = lab_size,
+    face = "bold", hjust = 0, vjust = 2, color = dark),
+  plot.subtitle = element_text(family = font,
+    size = lab_size - 2, color = dark),
+  plot.caption = element_text(family = font, size = lab_size,
+    hjust = 1, color = dark),
+  axis.title = element_text(family = font, size = lab_size,
+    color = dark),
+  axis.text = element_text(family = font, size = label_size,
+    color = dark),
+  axis.text.x = element_text(margin = margin(5, b = 10),
+    color = dark),
+  legend.title = element_text(family = font, size = lab_size,
+    color = dark, hjust = 0),
+  legend.text = element_text(family = font, size = label_size,
+    color = dark),
+  strip.text = element_text(family = font, size = label_size,
+    color = facet_text, margin = margin(4, 4, 4, 4)),
+  # Line elements
+  axis.ticks = element_line(color = dark, linewidth = 0.5),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank()
   )
 }
 ```
@@ -272,7 +272,7 @@ check_desc <- check %>%
   group_by(reason_type) %>%
   get_summary_stats(mn, type = "mean_sd") %>%
   rowwise() %>%
-  mutate(across(c(mean, sd), forma))
+  mutate(across(c(mean, sd), ~ forma(.x)))
 
 # One-sided paired t-test
 check_t <- check %>%
@@ -290,9 +290,9 @@ check_dz <- check %>%
   forma()
 
 # Print t-test
-check_report_plot <- paste0("t(", check_t$n1, ") = ", check_t$statistic,
+check_report_plot <- paste0("t(", check_t$df, ") = ", check_t$statistic,
   ",\n ", check_t$p, ",\n dz = ", check_dz)
-check_report_text <- paste0("t(", check_t$n1, ") = ", check_t$statistic,
+check_report_text <- paste0("t(", check_t$df, ") = ", check_t$statistic,
   ", ", check_t$p, ", d~z~ = ", check_dz)
 
 # Plot results
@@ -321,7 +321,7 @@ We included a manipulation check for reason type. The sufficient reasons are sup
 ```{r rt 2f analysis}
 # Prepare reaction time data
 rt <- d_long %>%
-  mutate(across(starts_with("rt_"), ~ifelse(is_correct == 0, NA, .))) %>%
+  mutate(across(starts_with("rt_"), ~ ifelse(is_correct == 0, NA, .))) %>%
   select(
     subject_id, probe_type, reason_type,
     item_order, starts_with("rt_")) %>%
@@ -337,7 +337,8 @@ rt <- d_long %>%
 rt_2f <- rt %>%
   select(-item_order) %>%
   group_by(reason_type, probe_type, subject_id) %>%
-  summarize(.groups = "drop_last", across(everything(), mean, na.rm = TRUE)) %>%
+  summarize(.groups = "drop_last",
+    across(everything(), ~ mean(.x, na.rm = TRUE))) %>%
   # Find rows that are extreme outliers
   mutate(is_extreme = is_extreme(rt_M2SD_log)) %>%
   ungroup() %T>%
@@ -374,7 +375,7 @@ rt_2f %>%
   {
     ggplot(., aes(reason_type, rt_M2SD_log, color = probe_type)) +
     geom_boxplot() +
-    labs(x = "Reason type", y = "Mean response latency in log(s)",
+    labs(x = "Reason type", y = "Mean response latency in log(ms)",
        fill = "Probe type") +
     scale_color_manual(values = c("#849AB9", "#465263")) +
     geom_point(
@@ -420,14 +421,14 @@ We conducted a two-way repeated-measures ANOVA to evaluate the effects of probe 
 knitr::kable(rt_2f_desc, format = "markdown")
 ```
 
-For interpretative ease, the participant means have been converted back to seconds before computing descriptive statistics.
+For interpretative ease, the participant means have been converted back to milliseconds before computing descriptive statistics.
 
 #### Lineplot
 ```{r rt 2f lineplot, message = FALSE}
 rt_2f_desc %>%
   {
     ggplot(., aes(reason_type, mean, color = probe_type, group = probe_type)) +
-    labs(x = "Reason type", y = "Mean response latency in seconds",
+    labs(x = "Reason type", y = "Mean response latency in ms",
       color = "Probe type") +
     scale_color_manual(values = c("#849AB9", "#465263")) +
     geom_line() +
@@ -456,7 +457,8 @@ Post-hoc tests revealed significant effects of probe type in both levels of reas
 rt_mv <- rt %>%
   select(-item_order) %>%
   group_by(subject_id, reason_type, probe_type) %>%
-  summarize(.groups = "drop", across(everything(), mean, na.rm = TRUE)) %>%
+  summarize(.groups = "drop",
+    across(everything(), ~ mean(.x, na.rm = TRUE))) %>%
   pivot_longer(
     cols = starts_with("rt"),
     names_to = c(NA, "cutoff", "trans"),
@@ -622,7 +624,7 @@ The main effect for probe type was significant, F(`r er_2f_mod$DFn[1]`, `r er_2f
 knitr::kable(rt_2f_desc, format = "markdown")
 ```
 
-For interpretative ease, the participant means have been converted back to seconds before computing descriptive statistics.
+For interpretative ease, the participant means have been converted back to milliseconds before computing descriptive statistics.
 
 #### Lineplot
 ```{r er 2f lineplot, message = FALSE}
@@ -654,7 +656,7 @@ Post-hoc tests revealed significant effects of probe type in both levels of reas
 rt_3f <- rt %>%
   group_by(item_order, reason_type, probe_type, subject_id) %>%
   summarize(.groups = "drop_last", across(everything(),
-    list(mean = mean, n = ~sum(!is.na(.x))), na.rm = TRUE)) %>%
+    list(mean = ~ mean(.x, na.rm = TRUE), n = ~ sum(!is.na(.x))))) %>%
   # Find rows that have less than four observations or are extreme outliers
   mutate(is_missing = rt_M2SD_log_n < 4) %>%
   mutate(is_extreme = is_extreme(rt_M2SD_log_mean)) %>%
@@ -707,7 +709,7 @@ rt_3f_ex %>% {
     ggplot(., aes(reason_type, rt_M2SD_log, color = probe_type)) +
     geom_boxplot() +
     facet_wrap(. ~ item_order, labeller = "label_value") +
-    labs(x = "Reason type", y = "Mean response latency in seconds",
+    labs(x = "Reason type", y = "Mean response latency in ms",
        group = "Probe type") +
     scale_color_manual(values = c("#849AB9", "#465263")) +
     geom_point(
@@ -761,7 +763,7 @@ rt_3f_desc %>%
   {
     ggplot(., aes(reason_type, mean, color = probe_type, group = probe_type)) +
     facet_wrap(. ~ item_order, labeller = "label_value") +
-    labs(x = "Reason type", y = "Mean response latency in seconds",
+    labs(x = "Reason type", y = "Mean response latency in ms",
       color = "Probe type") +
     scale_color_manual(values = c("#849AB9", "#465263")) +
     geom_line() +
@@ -784,7 +786,8 @@ Post-hoc tests revealed that the interaction between probe type and reason type 
 ```{r rt 3f mv, message = FALSE}
 rt_mv <- rt %>%
   group_by(subject_id, item_order, reason_type, probe_type) %>%
-  summarize(.groups = "keep", across(everything(), mean, na.rm = TRUE)) %>%
+  summarize(.groups = "keep",
+    across(everything(), ~ mean(.x, na.rm = TRUE))) %>%
   ungroup() %>%
   pivot_longer(
     cols = starts_with("rt"),
@@ -846,12 +849,12 @@ label_rate <- d_long %>%
     baserate = rating_baserate) %>%
   group_by(label) %>%
   summarize(.groups = "drop",
-    across(c(identity, necessity, baserate), mean, na.rm = TRUE))
+    across(c(identity, necessity, baserate), ~ mean(.x, na.rm = TRUE)))
 label_suff <- d_long %>%
   filter(probe_type == "im") %>%
   select(label, reason_type, sufficiency = rating_sufficiency) %>%
   group_by(label, reason_type) %>%
-  summarize(.groups = "drop", across(sufficiency, mean, na.rm = TRUE))
+  summarize(.groups = "drop", across(sufficiency, ~ mean(.x, na.rm = TRUE)))
 label <- d_long %>%
   select(label, behavior, probe_type,
     reason_type, rt_M2SD_log, is_correct) %>%
@@ -965,6 +968,55 @@ c2 <- label_disc %>%
   cor_table()
 
 knitr::kable(c2, format = "markdown")
+
+item_results <- data.frame()
+for (id in unique(d_long$item_id)) {
+  sub <- d_long %>%
+    filter(item_id == id) %>%
+    select(item_id, subject_id, label, probe_type, reason_type, rt_M2SD_log)
+
+  sub_wide <- sub %>%
+    select(-label) %>%
+    pivot_wider(names_from = probe_type, values_from = c(rt_M2SD_log)) %>%
+    mutate(.keep = "unused", inference_effect = im - io)
+
+  # Descriptives
+  sub_desc <- sub %>%
+    group_by(item_id, probe_type, reason_type, label) %>%
+    get_summary_stats(rt_M2SD_log, type = "mean") %>%
+    select(-n, -variable) %>%
+    pivot_wider(names_from = probe_type, values_from = c(mean, label)) %>%
+    mutate(.keep = "unused",
+      inference_effect = mean_im - mean_io) %>%
+    pivot_wider(names_from = reason_type,
+      values_from = inference_effect, names_prefix = "inference_")
+
+  # Two-sided Welch two-sample t-test
+  sub_t <- sub_wide %>%
+    t_test(
+      inference_effect ~ reason_type,
+      paired = FALSE,
+      alternative = "two.sided",
+      ref.group = "ctrl") %>%
+    rename(t = statistic) %>%
+    select(-.y., -group1, -group2)
+
+  # Cohens dz
+  sub_d <- sub_wide %>%
+    cohens_d(inference_effect ~ reason_type,
+      paired = FALSE, ref.group = "ctrl") %>%
+    select(`cohen's d` = effsize)
+
+  # Merge
+  sub_all <- cbind(sub_desc, sub_t, sub_d)
+  item_results <- rbind(item_results, sub_all)
+}
+
+item_results <- item_results %>%
+  rowwise() %>%
+  mutate(across(
+    c(inference_ctrl, inference_suff, t, df, `cohen's d`), ~ forma(.x))) %>%
+  mutate(p = formp(p))
 ```
 
 The discounting effect was not significantly correlated with any of the ratings. Baserate ratings were positively correlated with identity ratings. Descriptively the sufficiency ratings most strongly predicted the discounting effect.
