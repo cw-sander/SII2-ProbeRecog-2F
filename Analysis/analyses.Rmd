@@ -1,5 +1,5 @@
 ---
-title: "Analyses for SII Study 2"
+title: "Analyses for SII Experiment 4"
 output: 
   html_notebook:
   code_folding: hide
@@ -249,9 +249,6 @@ theme_cs_talk <- function(font = "Nunito", lab_size = 16, label_size = 14,
 }
 ```
 
-### Introduction
-Research on person perception has revealed that people tend to attribute other's behavior to stable person characteristics, even if it can just as well be explained by reasons such as situational factors or mental states. This tendency is known as the correspondence bias (Gilbert & Malone, 1995) and may play an important role in the domain of political polarization. Specifically, people may attribute each other's politically relevant behaviors to stable ideological dispositions (such as leftist, conservative, racist, or feminist), while neglecting potential other causes and thereby impeding mutual understanding. To investigate the role of the correspondence bias in political polarization, we examine whether spontaneous ideological inferences are reduced when behaviors are accompanied by information on relatively sufficient reasons for the behavior. We thus extend previous research on spontaneous trait inferences (STI, Winter & Uleman, 1984) and the correspondence bias to spontaneous inferences of ideological dispositions.
-
 ### Sample Characteristics
 We collected data from a total of N = 250 participants. Following our pre-registered exclusion criteria, we excluded 9 participants whose average correct response times were slower than two standard deviations over the sample mean, 1 whose recognition performance was lower than 60% in the probe recognition task, 3 who rated their own data to be unfit for analysis, and 1 who did not give informed consent. This resulted in a sample of N = `r nrow(dems)` participants (`r nrow(filter(dems, gender == "female"))` female, `r nrow(filter(dems, gender == "male"))` male, `r nrow(filter(dems, gender == "other"))` other, `r nrow(filter(dems, gender %in% c("not specified","")))` not specified; average age M = `r round(mean(dems$age, na.rm = TRUE), 1)` years, SD = `r round(sd(dems$age, na.rm = TRUE), 1)`, ranging from `r min(dems$age, na.rm = TRUE)` to `r max(dems$age, na.rm = TRUE)`). Participants were recruited via the online platform Prolific (www.prolific.co) and received monetary compensation of 4.50 GBP for completing the 30-minute study. An additional 42 people started the experiment on prolific but either returned their submission, timed-out, or only partially completed the experiment due to technical issues.
 
@@ -296,23 +293,20 @@ check_report_text <- paste0("t(", check_t$df, ") = ", check_t$statistic,
   ", ", check_t$p, ", d~z~ = ", check_dz)
 
 # Plot results
-check %>%
-  {
-    ggplot(., aes(x = mn, fill = reason_type, color = reason_type)) +
-    labs(x = "Mean sufficiency rating", y = "Count",
-       fill = "Reason type", color = "Reason type") +
-    scale_x_continuous(limits = c(1, 5), oob = scales::oob_keep) +
-    scale_y_continuous(limits = c(0, 47)) +
-    geom_histogram(position = "identity", alpha = .7, bins = 20) +
-    scale_fill_manual(values = c("#849AB9", "#465263")) +
-    scale_color_manual(values = c("#849AB9", "#465263")) +
-    geom_label(aes(x = 4.5, y = 43, label = check_report_plot), fill = "white",
-           show.legend = FALSE, label.padding = unit(0.5, "lines"),
-           label.size = 0.5) +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 6,
-       filename = here::here("Analysis/check.pdf"))
+check_plot <- check %>%
+  ggplot(., aes(x = mn, fill = reason_type, color = reason_type)) +
+  labs(x = "Mean sufficiency rating", y = "Count",
+      fill = "Reason type", color = "Reason type") +
+  scale_x_continuous(limits = c(1, 5), oob = scales::oob_keep) +
+  scale_y_continuous(limits = c(0, 47)) +
+  geom_histogram(position = "identity", alpha = .7, bins = 20) +
+  scale_fill_manual(values = c("#849AB9", "#465263")) +
+  scale_color_manual(values = c("#849AB9", "#465263")) +
+  geom_label(aes(x = 4.5, y = 43, label = check_report_plot), fill = "white",
+          show.legend = FALSE, label.padding = unit(0.5, "lines"),
+          label.size = 0.5) +
+  theme_cs_talk()
+check_plot
 ```
 
 We included a manipulation check for reason type. The sufficient reasons are supposed to sufficiently explain the behaviors, whereas the control reasons are supposed to insufficiently explain the behavior (or not explain the behavior at all). We thus asked participants at the end of the study to rate the sufficiency of each reason for the respective behavior and expected the sufficient reasons to score higher than the control reasons. To test this, we conducted a paired t-test. On average, participants gave significantly higher sufficiency ratings in the sufficient condition (M = `r check_desc$mean[2]`, SD = `r check_desc$sd[2]`) than in the control condition (M = `r check_desc$mean[1]`, SD = `r check_desc$sd[1]`), `r check_report_text`. We infer from this, that our manipulation of reason type worked.
@@ -371,40 +365,34 @@ To prepare the response latency data for our main analysis we applied an individ
 
 #### Outlier detection
 ```{r rt 2f outlier, message = FALSE, warning = FALSE}
-rt_2f %>%
-  {
-    ggplot(., aes(reason_type, rt_M2SD_log, color = probe_type)) +
-    geom_boxplot() +
-    labs(x = "Reason type", y = "Mean response latency in log(ms)",
-       fill = "Probe type") +
-    scale_color_manual(values = c("#849AB9", "#465263")) +
-    geom_point(
-      # Replace all non-outlier values by NA
-      data = mutate(rt_2f, rt_M2SD_log = replace(
-        rt_M2SD_log, is_extreme == FALSE, NA)),
-      position = position_dodge(width = 0.75), shape = 4,
-      size = 4, show.legend = FALSE) +
-    theme_cs_talk()
-  } %T>%
-  ggexport(., width = 6, height = 5,
-       filename = here("Analysis/rt-2f-outlier.pdf"))
+rt_2f_outlier <- rt_2f %>%
+  ggplot(., aes(reason_type, rt_M2SD_log, color = probe_type)) +
+  geom_boxplot() +
+  labs(x = "Reason type", y = "Mean response latency in log(ms)",
+      fill = "Probe type") +
+  scale_color_manual(values = c("#849AB9", "#465263")) +
+  geom_point(
+    # Replace all non-outlier values by NA
+    data = mutate(rt_2f, rt_M2SD_log = replace(
+      rt_M2SD_log, is_extreme == FALSE, NA)),
+    position = position_dodge(width = 0.75), shape = 4,
+    size = 4, show.legend = FALSE) +
+  theme_cs_talk()
+rt_2f_outlier
 ```
 
 We looked for extreme outliers in each cell of the design. We defined them as values above Q3 + 3 * IQR or below Q1 - 3 * IQR. We found and excluded `r rt_2f_ex_n` participants whose values were extreme outliers.
 
 #### QQ-Plot
 ```{r rt 2f qq, message = FALSE}
-rt_2f_ex %>%
-  {
-    ggplot(., aes(sample = rt_M2SD_log)) +
-    labs(x = "Theoretical quantiles", y = "Data quantiles") +
-    stat_qq(color = "#465263") +
-    stat_qq_line(color = "#465263") +
-    facet_grid(probe_type ~ reason_type, labeller = "label_value") +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 7,
-       filename = here("Analysis/rt-2f-qq.pdf"))
+rt_2f_qq <- rt_2f_ex %>%
+  ggplot(., aes(sample = rt_M2SD_log)) +
+  labs(x = "Theoretical quantiles", y = "Data quantiles") +
+  stat_qq(color = "#465263") +
+  stat_qq_line(color = "#465263") +
+  facet_grid(probe_type ~ reason_type, labeller = "label_value") +
+  theme_cs_talk()
+rt_2f_qq
 ```
 
 Upon visual inspection the distributions of the mean response latencies in the different conditions did not seem severely non-normal. We therefore applied no further transformations before conducting our analysis.
@@ -425,19 +413,16 @@ For interpretative ease, the participant means have been converted back to milli
 
 #### Lineplot
 ```{r rt 2f lineplot, message = FALSE}
-rt_2f_desc %>%
-  {
-    ggplot(., aes(reason_type, mean, color = probe_type, group = probe_type)) +
-    labs(x = "Reason type", y = "Mean response latency in ms",
-      color = "Probe type") +
-    scale_color_manual(values = c("#849AB9", "#465263")) +
-    geom_line() +
-    geom_point(size = 3) +
-    geom_linerange(aes(ymin = ci95_low, ymax = ci95_upp)) +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 6, height = 5,
-       filename = here::here("Analysis/rt-2f-lineplot.pdf"))
+rt_2f_lineplot <- rt_2f_desc %>%
+  ggplot(., aes(reason_type, mean, color = probe_type, group = probe_type)) +
+  labs(x = "Reason type", y = "Mean response latency in ms",
+    color = "Probe type") +
+  scale_color_manual(values = c("#849AB9", "#465263")) +
+  geom_line() +
+  geom_point(size = 3) +
+  geom_linerange(aes(ymin = ci95_low, ymax = ci95_upp)) +
+  theme_cs_talk()
+rt_2f_lineplot
 ```
 
 #### Post-hoc tests
@@ -576,38 +561,32 @@ Although we instructed participants to respond as accurately as possible, it is 
 
 #### Outlier detection 2f
 ```{r er 2f outlier, warning = FALSE, message = FALSE}
-filter(er_2f, is_extreme == FALSE) %>%
-  {
-    ggplot(., aes(reason_type, er, color = probe_type)) +
-    geom_boxplot(aes(color = probe_type)) +
-    labs(x = "Probe type", y = "False recognition rate") +
-    scale_color_manual(values = c("#849AB9", "#465263")) +
-    geom_point(
-      # Replace all non-outlier values by NA
-      data = mutate(er_2f, er = replace(er, is_extreme == FALSE, NA)), # nolint
-      position = position_jitterdodge(0.5, 0.01, 0.75, 3),
-      shape = 4, size = 4, show.legend = FALSE) +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 5, height = 5,
-       filename = here::here("Analysis/er-2f-outlier.pdf"))
+er_2f_outlier <- filter(er_2f, is_extreme == FALSE) %>%
+  ggplot(., aes(reason_type, er, color = probe_type)) +
+  geom_boxplot(aes(color = probe_type)) +
+  labs(x = "Probe type", y = "False recognition rate") +
+  scale_color_manual(values = c("#849AB9", "#465263")) +
+  geom_point(
+    # Replace all non-outlier values by NA
+    data = mutate(er_2f, er = replace(er, is_extreme == FALSE, NA)), # nolint
+    position = position_jitterdodge(0.5, 0.01, 0.75, 3),
+    shape = 4, size = 4, show.legend = FALSE) +
+  theme_cs_talk()
+er_2f_outlier
 ```
 
 We looked for extreme outliers in each cell of the design. We defined them as values above Q3 + 3 * IQR or below Q1 - 3 * IQR. We found and excluded `r er_2f_ex_n` participants whose values were extreme outliers.
 
 #### QQ-Plot
 ```{r er 2f qq, message = FALSE}
-er_2f_ex %>%
-  {
-    ggplot(., aes(sample = er)) +
-    labs(x = "Theoretical quantiles", y = "Data quantiles") +
-    stat_qq(color = "#465263") +
-    stat_qq_line(color = "#465263") +
-    facet_grid(probe_type ~ reason_type, labeller = "label_value") +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 7,
-       filename = here("Analysis/er-2f-qq.pdf"))
+er_2f_qq <- er_2f_ex %>%
+  ggplot(., aes(sample = er)) +
+  labs(x = "Theoretical quantiles", y = "Data quantiles") +
+  stat_qq(color = "#465263") +
+  stat_qq_line(color = "#465263") +
+  facet_grid(probe_type ~ reason_type, labeller = "label_value") +
+  theme_cs_talk()
+er_2f_qq
 ```
 
 Upon visual inspection the distributions in the different conditions did not seem severely non-normal. We therefore performed our analyses with the untransformed error rates.
@@ -628,19 +607,16 @@ For interpretative ease, the participant means have been converted back to milli
 
 #### Lineplot
 ```{r er 2f lineplot, message = FALSE}
-er_2f_desc %>%
-  {
-    ggplot(., aes(reason_type, median,
-            color = probe_type, group = probe_type)) +
-    labs(x = "Reason type", y = "False recognition rate",
-       color = "Probe type") +
-    scale_color_manual(values = c("#849AB9", "#465263")) +
-    geom_line() +
-    geom_point(size = 3) +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 6, height = 5,
-       filename = here::here("Analysis/er-2f-lineplot.pdf"))
+er_2f_lineplot <- er_2f_desc %>%
+  ggplot(., aes(reason_type, median,
+          color = probe_type, group = probe_type)) +
+  labs(x = "Reason type", y = "False recognition rate",
+      color = "Probe type") +
+  scale_color_manual(values = c("#849AB9", "#465263")) +
+  geom_line() +
+  geom_point(size = 3) +
+  theme_cs_talk()
+er_2f_lineplot
 ```
 
 #### Post-hoc tests
@@ -705,42 +681,37 @@ The order of presentation of the behaviors and reasons was randomized for each p
 
 #### Outlier detection 3f
 ```{r rt 3f outlier, message = FALSE, warning = FALSE}
-rt_3f_ex %>% {
-    ggplot(., aes(reason_type, rt_M2SD_log, color = probe_type)) +
-    geom_boxplot() +
-    facet_wrap(. ~ item_order, labeller = "label_value") +
-    labs(x = "Reason type", y = "Mean response latency in ms",
-       group = "Probe type") +
-    scale_color_manual(values = c("#849AB9", "#465263")) +
-    geom_point(
-      # Replace all non-outlier values by NA
-      data = mutate(rt_3f, rt_M2SD_log = replace(
-        rt_M2SD_log, is_extreme == FALSE, NA)),
-      position = position_dodge(width = 0.75), shape = 4,
-      size = 4, show.legend = FALSE) +
-    theme_cs_talk()
-  } %T>%
-  ggexport(., width = 8, height = 5,
-       filename = here("Analysis/rt-3f-outlier-plot.pdf"))
+rt_3f_outlier <- rt_3f_ex %>%
+  ggplot(., aes(reason_type, rt_M2SD_log, color = probe_type)) +
+  geom_boxplot() +
+  facet_wrap(. ~ item_order, labeller = "label_value") +
+  labs(x = "Reason type", y = "Mean response latency in ms",
+      group = "Probe type") +
+  scale_color_manual(values = c("#849AB9", "#465263")) +
+  geom_point(
+    # Replace all non-outlier values by NA
+    data = mutate(rt_3f, rt_M2SD_log = replace(
+      rt_M2SD_log, is_extreme == FALSE, NA)),
+    position = position_dodge(width = 0.75), shape = 4,
+    size = 4, show.legend = FALSE) +
+  theme_cs_talk()
+rt_3f_outlier
 ```
 
 We looked for extreme outliers in each cell of the design. We defined them as values above Q3 + 3 * IQR or below Q1 - 3 * IQR. We found and excluded `r rt_3f_ex_n` participants whose values were extreme outliers. Because item order was randomized and not counterbalanced with the other experimental factors, the observations per cell varied between 0 and 10. We ran an analysis excluding cells with less than 4 observations. Because this did not affect the results we report analyses using the full dataset (excluding only one participant who had zero observations in two cells).
 
 #### QQ-Plot
 ```{r rt 3f qq, message = FALSE}
-rt_3f_ex %>%
-  {
-    ggplot(., aes(sample = rt_M2SD_log)) +
-    labs(x = "Theoretical quantiles", y = "Data quantiles") +
-    stat_qq(color = "#465263") +
-    stat_qq_line(color = "#465263") +
-    facet_grid(
-      probe_type ~ reason_type ~ item_order,
-      labeller = "label_value") +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 7,
-       filename = here("Analysis/rt-3f-qq.pdf"))
+rt_3f_qq <- rt_3f_ex %>%
+  ggplot(., aes(sample = rt_M2SD_log)) +
+  labs(x = "Theoretical quantiles", y = "Data quantiles") +
+  stat_qq(color = "#465263") +
+  stat_qq_line(color = "#465263") +
+  facet_grid(
+    probe_type ~ reason_type ~ item_order,
+    labeller = "label_value") +
+  theme_cs_talk()
+rt_3f_qq
 ```
 
 Upon visual inspection the distributions of the mean response latencies in the different conditions did not seem severely non-normal. We therefore performed the analysis with untransformed mean response latencies.
@@ -759,20 +730,17 @@ knitr::kable(rt_3f_desc, format = "markdown")
 
 #### Lineplot
 ```{r rt 3f lineplot, message = FALSE}
-rt_3f_desc %>%
-  {
-    ggplot(., aes(reason_type, mean, color = probe_type, group = probe_type)) +
-    facet_wrap(. ~ item_order, labeller = "label_value") +
-    labs(x = "Reason type", y = "Mean response latency in ms",
-      color = "Probe type") +
-    scale_color_manual(values = c("#849AB9", "#465263")) +
-    geom_line() +
-    geom_point(size = 3) +
-    geom_linerange(aes(ymin = ci95_low, ymax = ci95_upp)) +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 8, height = 5,
-       filename = here::here("Analysis/rt-3f-lineplot.pdf"))
+rt_3f_lineplot <- rt_3f_desc %>%
+  ggplot(., aes(reason_type, mean, color = probe_type, group = probe_type)) +
+  facet_wrap(. ~ item_order, labeller = "label_value") +
+  labs(x = "Reason type", y = "Mean response latency in ms",
+    color = "Probe type") +
+  scale_color_manual(values = c("#849AB9", "#465263")) +
+  geom_line() +
+  geom_point(size = 3) +
+  geom_linerange(aes(ymin = ci95_low, ymax = ci95_upp)) +
+  theme_cs_talk()
+rt_3f_lineplot
 ```
 
 #### Post-hoc tests
@@ -880,74 +848,62 @@ There were also strong and significant intercorrelations between the ratings: Su
 
 #### Identity
 ```{r by-label sii identity, message = FALSE}
-filter(label, reason_type == "suff") %>%
-  {
-    ggplot(., aes(x = identity, y = sii_effect)) +
-    labs(x = "Mean identity rating", y = "SII effect") +
-    geom_smooth(method = "lm", formula = y ~ x, color = "#465263",
-      size = 0.5, fill = "#849AB9") +
-    geom_abline(intercept = 0, slope = 0, color = "#465263") +
-    geom_point(color = "#465263") +
-    geom_label_repel(size = 4.3, label = .$label, box.padding = 0.2,
-      family = "Nunito", color = "#465263") +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 6,
-       filename = here::here("Analysis/by-label-sii-identity.pdf"))
+by_label_sii_identity <- filter(label, reason_type == "suff") %>%
+  ggplot(., aes(x = identity, y = sii_effect)) +
+  labs(x = "Mean identity rating", y = "SII effect") +
+  geom_smooth(method = "lm", formula = y ~ x, color = "#465263",
+    linewidth = 0.5, fill = "#849AB9") +
+  geom_abline(intercept = 0, slope = 0, color = "#465263") +
+  geom_point(color = "#465263") +
+  geom_label_repel(label = filter(label, reason_type == "suff")$label,
+    size = 4.3, box.padding = 0.2, family = "Nunito", color = "#465263") +
+  theme_cs_talk()
+by_label_sii_identity
 ```
 
 #### Necessity
 ```{r by-label sii necessity, message = FALSE}
-filter(label, reason_type == "suff") %>%
-  {
-    ggplot(., aes(x = necessity, y = sii_effect)) +
-    labs(x = "Mean necessity rating", y = "SII effect") +
-    geom_smooth(method = "lm", formula = y ~ x, color = "#465263",
-      size = 0.5, fill = "#849AB9") +
-    geom_abline(intercept = 0, slope = 0, color = "#465263") +
-    geom_point(color = "#465263") +
-    geom_label_repel(size = 4.3, label = .$label, box.padding = 0.2,
-      family = "Nunito", color = "#465263") +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 6,
-       filename = here::here("Analysis/by-label-sii-necessity.pdf"))
+by_label_sii_necessity <- filter(label, reason_type == "suff") %>%
+  ggplot(., aes(x = necessity, y = sii_effect)) +
+  labs(x = "Mean necessity rating", y = "SII effect") +
+  geom_smooth(method = "lm", formula = y ~ x, color = "#465263",
+    size = 0.5, fill = "#849AB9") +
+  geom_abline(intercept = 0, slope = 0, color = "#465263") +
+  geom_point(color = "#465263") +
+  geom_label_repel(label = filter(label, reason_type == "suff")$label,
+    size = 4.3, box.padding = 0.2, family = "Nunito", color = "#465263") +
+  theme_cs_talk()
+by_label_sii_necessity
 ```
 
 #### Baserate
 ```{r by-label sii baserate, message = FALSE}
-filter(label, reason_type == "suff") %>%
-  {
-    ggplot(., aes(x = baserate, y = sii_effect)) +
-    labs(x = "Mean baserate rating", y = "SII effect") +
-    geom_smooth(method = "lm", formula = y ~ x, color = "#465263",
-      size = 0.5, fill = "#849AB9") +
-    geom_abline(intercept = 0, slope = 0, color = "#465263") +
-    geom_point(color = "#465263") +
-    geom_label_repel(size = 4.3, label = .$label, box.padding = 0.2,
-      family = "Nunito", color = "#465263") +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 6,
-       filename = here::here("Analysis/by-label-sii-baserate.pdf"))
+by_label_sii_baserate <- filter(label, reason_type == "suff") %>%
+  ggplot(., aes(x = baserate, y = sii_effect)) +
+  labs(x = "Mean baserate rating", y = "SII effect") +
+  geom_smooth(method = "lm", formula = y ~ x, color = "#465263",
+    size = 0.5, fill = "#849AB9") +
+  geom_abline(intercept = 0, slope = 0, color = "#465263") +
+  geom_point(color = "#465263") +
+  geom_label_repel(label = filter(label, reason_type == "suff")$label,
+    size = 4.3, box.padding = 0.2, family = "Nunito", color = "#465263") +
+  theme_cs_talk()
+by_label_sii_baserate
 ```
 
 #### Sufficiency
 ```{r by-label sii sufficiency, message = FALSE}
-filter(label, reason_type == "suff") %>%
-  {
-    ggplot(., aes(x = sufficiency, y = sii_effect)) +
-    labs(x = "Mean sufficiency rating", y = "SII effect") +
-    geom_smooth(method = "lm", formula = y ~ x, color = "#465263",
-      size = 0.5, fill = "#849AB9") +
-    geom_abline(intercept = 0, slope = 0, color = "#465263") +
-    geom_point(color = "#465263") +
-    geom_label_repel(size = 4.3, label = .$label, box.padding = 0.2,
-      family = "Nunito", color = "#465263") +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 6,
-       filename = here::here("Analysis/by-label-sii-sufficiency.pdf"))
+by_label_sii_sufficiency <- filter(label, reason_type == "suff") %>%
+  ggplot(., aes(x = sufficiency, y = sii_effect)) +
+  labs(x = "Mean sufficiency rating", y = "SII effect") +
+  geom_smooth(method = "lm", formula = y ~ x, color = "#465263",
+    size = 0.5, fill = "#849AB9") +
+  geom_abline(intercept = 0, slope = 0, color = "#465263") +
+  geom_point(color = "#465263") +
+  geom_label_repel(label = filter(label, reason_type == "suff")$label,
+    size = 4.3, box.padding = 0.2, family = "Nunito", color = "#465263") +
+  theme_cs_talk()
+by_label_sii_sufficiency
 ```
 
 ### Exploratory by-item analyses for the discounting effect {.tabset}
@@ -1023,66 +979,54 @@ The discounting effect was not significantly correlated with any of the ratings.
 
 #### Identity
 ```{r by-label discounting identity, message = FALSE}
-label_disc %>%
-  {
-    ggplot(., aes(x = identity, y = discounting)) +
-    labs(x = "Mean identity rating", y = "Discounting effect") +
-    geom_abline(intercept = 0, slope = 0, color = "#465263") +
-    geom_point(color = "#465263") +
-    geom_label_repel(size = 4.3, label = .$label, box.padding = 0.2,
-      family = "Nunito", color = "#465263") +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 6,
-       filename = here::here("Analysis/by-label-disc-identity.pdf"))
+by_label_disc_identity <- label_disc %>%
+  ggplot(., aes(x = identity, y = discounting)) +
+  labs(x = "Mean identity rating", y = "Discounting effect") +
+  geom_abline(intercept = 0, slope = 0, color = "#465263") +
+  geom_point(color = "#465263") +
+  geom_label_repel(size = 4.3, label = label_disc$label, box.padding = 0.2,
+    family = "Nunito", color = "#465263") +
+  theme_cs_talk()
+by_label_disc_identity
 ```
 
 #### Necessity
 ```{r by-label discounting necessity, message = FALSE}
-label_disc %>%
-  {
-    ggplot(., aes(x = necessity, y = discounting)) +
-    labs(x = "Mean necessity rating", y = "Discounting effect") +
-    geom_abline(intercept = 0, slope = 0, color = "#465263") +
-    geom_point(color = "#465263") +
-    geom_label_repel(size = 4.3, label = .$label, box.padding = 0.2,
-      family = "Nunito", color = "#465263") +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 6,
-       filename = here::here("Analysis/by-label-disc-necessity.pdf"))
+by_label_disc_necessity <- label_disc %>%
+  ggplot(., aes(x = necessity, y = discounting)) +
+  labs(x = "Mean necessity rating", y = "Discounting effect") +
+  geom_abline(intercept = 0, slope = 0, color = "#465263") +
+  geom_point(color = "#465263") +
+  geom_label_repel(size = 4.3, label = label_disc$label, box.padding = 0.2,
+    family = "Nunito", color = "#465263") +
+  theme_cs_talk()
+by_label_disc_necessity
 ```
 
 #### Baserate
 ```{r by-label discounting baserate, message = FALSE}
-label_disc %>%
-  {
-    ggplot(., aes(x = baserate, y = discounting)) +
-    labs(x = "Mean baserate rating", y = "Discounting effect") +
-    geom_abline(intercept = 0, slope = 0, color = "#465263") +
-    geom_point(color = "#465263") +
-    geom_label_repel(size = 4.3, label = .$label, box.padding = 0.2,
-      family = "Nunito", color = "#465263") +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 6,
-       filename = here::here("Analysis/by-label-disc-baserate.pdf"))
+by_label_disc_baserate <- label_disc %>%
+  ggplot(., aes(x = baserate, y = discounting)) +
+  labs(x = "Mean baserate rating", y = "Discounting effect") +
+  geom_abline(intercept = 0, slope = 0, color = "#465263") +
+  geom_point(color = "#465263") +
+  geom_label_repel(size = 4.3, label = label_disc$label, box.padding = 0.2,
+    family = "Nunito", color = "#465263") +
+  theme_cs_talk()
+by_label_disc_baserate
 ```
 
 #### Sufficiency
 ```{r by-label discounting sufficiency, message = FALSE}
-label_disc %>%
-  {
-    ggplot(., aes(x = sufficiency, y = discounting)) +
-    labs(x = "Mean sufficiency rating", y = "Discounting effect") +
-    geom_abline(intercept = 0, slope = 0, color = "#465263") +
-    geom_point(color = "#465263") +
-    geom_label_repel(size = 4.3, label = .$label, box.padding = 0.2,
-      family = "Nunito", color = "#465263") +
-    theme_cs_talk()
-  } %T>%
-  ggexport(width = 7, height = 6,
-       filename = here::here("Analysis/by-item-disc-sufficiency.pdf"))
+by_item_disc_sufficiency <- label_disc %>%
+  ggplot(., aes(x = sufficiency, y = discounting)) +
+  labs(x = "Mean sufficiency rating", y = "Discounting effect") +
+  geom_abline(intercept = 0, slope = 0, color = "#465263") +
+  geom_point(color = "#465263") +
+  geom_label_repel(size = 4.3, label = label_disc$label, box.padding = 0.2,
+    family = "Nunito", color = "#465263") +
+  theme_cs_talk()
+by_item_disc_sufficiency
 ```
 
 ### Exploratory multilevel analyses {.tabset}
@@ -1175,4 +1119,43 @@ sjPlot::tab_model(mlm3)
 #### Model IV
 ```{r multilevel model 4}
 sjPlot::tab_model(mlm4)
+```
+
+```{r save plots, message = FALSE, eval = FALSE}
+ggexport(check_plot, width = 7, height = 6,
+  filename = here::here("Analysis/check.pdf"))
+ggexport(rt_2f_outlier, width = 6, height = 5,
+  filename = here("Analysis/rt-2f-outlier.pdf"))
+ggexport(rt_2f_qq, width = 7, height = 7,
+  filename = here("Analysis/rt-2f-qq.pdf"))
+ggexport(rt_2f_lineplot, width = 6, height = 5,
+  filename = here::here("Analysis/rt-2f-lineplot.pdf"))
+ggexport(er_2f_outlier, width = 5, height = 5,
+  filename = here::here("Analysis/er-2f-outlier.pdf"))
+ggexport(er_2f_qq, width = 7, height = 7,
+  filename = here("Analysis/er-2f-qq.pdf"))
+ggexport(er_2f_lineplot, width = 6, height = 5,
+  filename = here::here("Analysis/er-2f-lineplot.pdf"))
+ggexport(rt_3f_outlier, width = 8, height = 5,
+  filename = here("Analysis/rt-3f-outlier.pdf"))
+ggexport(rt_3f_qq, width = 7, height = 7,
+  filename = here("Analysis/rt-3f-qq.pdf"))
+ggexport(rt_3f_lineplot, width = 8, height = 5,
+  filename = here::here("Analysis/rt-3f-lineplot.pdf"))
+ggexport(by_label_sii_identity, width = 7, height = 6,
+  filename = here::here("Analysis/by-label-sii-identity.pdf"))
+ggexport(by_label_sii_necessity, width = 7, height = 6,
+  filename = here::here("Analysis/by-label-sii-necessity.pdf"))
+ggexport(by_label_sii_baserate, width = 7, height = 6,
+  filename = here::here("Analysis/by-label-sii-baserate.pdf"))
+ggexport(by_label_sii_sufficiency, width = 7, height = 6,
+  filename = here::here("Analysis/by-label-sii-sufficiency.pdf"))
+ggexport(by_label_disc_identity, width = 7, height = 6,
+  filename = here::here("Analysis/by-label-disc-identity.pdf"))
+ggexport(by_label_disc_necessity, width = 7, height = 6,
+  filename = here::here("Analysis/by-label-disc-necessity.pdf"))
+ggexport(by_item_disc_baserate, width = 7, height = 6,
+  filename = here::here("Analysis/by-label-disc-baserate.pdf"))
+ggexport(by_item_disc_sufficiency, width = 7, height = 6,
+  filename = here::here("Analysis/by-item-disc-sufficiency.pdf"))
 ```
